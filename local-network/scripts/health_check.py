@@ -5,21 +5,15 @@ Checks status of all containers and services
 """
 
 import subprocess
-import json
-import time
 import sys
+import time
 from typing import Dict, List
 
 
 def run_command(cmd: List[str]) -> tuple:
     """Run a shell command and return output and return code"""
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         return result.stdout, result.returncode
     except subprocess.TimeoutExpired:
         return "", -1
@@ -29,16 +23,16 @@ def run_command(cmd: List[str]) -> tuple:
 
 def check_docker_containers() -> Dict[str, bool]:
     """Check if all containers are running"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking Docker Containers")
-    print("="*60)
+    print("=" * 60)
 
     containers = {
         "ec-opgeth": False,
         "ec-opreth": False,
         "cc-lighthouse": False,
         "cc-prysm": False,
-        "validator-lighthouse": False
+        "validator-lighthouse": False,
     }
 
     output, _ = run_command(["docker", "ps", "--format", "{{.Names}}"])
@@ -58,14 +52,10 @@ def check_rpc_endpoint(url: str, name: str) -> bool:
     """Check if RPC endpoint is responding"""
     try:
         import httpx
+
         client = httpx.Client(timeout=5.0)
 
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "eth_blockNumber",
-            "params": [],
-            "id": 1
-        }
+        payload = {"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}
 
         response = client.post(url, json=payload, timeout=5.0)
         result = response.json()
@@ -89,60 +79,51 @@ def check_rpc_endpoint(url: str, name: str) -> bool:
 
 def check_execution_clients() -> Dict[str, bool]:
     """Check execution clients"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking Execution Clients")
-    print("="*60)
+    print("=" * 60)
 
     status = {}
 
     # Check op-geth
-    status["op-geth"] = check_rpc_endpoint(
-        "http://127.0.0.1:18545",
-        "op-geth RPC"
-    )
+    status["op-geth"] = check_rpc_endpoint("http://127.0.0.1:18545", "op-geth RPC")
 
     # Check op-reth
-    status["op-reth"] = check_rpc_endpoint(
-        "http://127.0.0.1:28545",
-        "op-reth RPC"
-    )
+    status["op-reth"] = check_rpc_endpoint("http://127.0.0.1:28545", "op-reth RPC")
 
     return status
 
 
 def check_consensus_clients() -> Dict[str, bool]:
     """Check consensus clients"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking Consensus Clients")
-    print("="*60)
+    print("=" * 60)
 
     status = {}
 
     # Check Lighthouse
     status["lighthouse"] = check_rpc_endpoint(
-        "http://127.0.0.1:15052",
-        "Lighthouse API"
+        "http://127.0.0.1:15052", "Lighthouse API"
     )
 
     # Check Prysm
-    status["prysm"] = check_rpc_endpoint(
-        "http://127.0.0.1:14000",
-        "Prysm API"
-    )
+    status["prysm"] = check_rpc_endpoint("http://127.0.0.1:14000", "Prysm API")
 
     return status
 
 
 def check_eth_simulateV1() -> Dict[str, bool]:
     """Check if eth_simulateV1 is available"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking eth_simulateV1 Support")
-    print("="*60)
+    print("=" * 60)
 
     status = {}
 
     try:
         import httpx
+
         client = httpx.Client(timeout=5.0)
 
         # Test on op-reth
@@ -150,11 +131,8 @@ def check_eth_simulateV1() -> Dict[str, bool]:
             payload = {
                 "jsonrpc": "2.0",
                 "method": "eth_simulateV1",
-                "params": [{
-                    "blockNumber": "latest",
-                    "transactions": []
-                }],
-                "id": 1
+                "params": [{"blockNumber": "latest", "transactions": []}],
+                "id": 1,
             }
 
             response = client.post("http://127.0.0.1:28545", json=payload, timeout=5.0)
@@ -165,7 +143,9 @@ def check_eth_simulateV1() -> Dict[str, bool]:
                     print(f"  ✗ op-reth: eth_simulateV1 not available")
                     status["op-reth"] = False
                 else:
-                    print(f"  ⚠ op-reth: eth_simulateV1 available (returned error: {result['error'].get('message', 'unknown')})")
+                    print(
+                        f"  ⚠ op-reth: eth_simulateV1 available (returned error: {result['error'].get('message', 'unknown')})"
+                    )
                     status["op-reth"] = True
             else:
                 print(f"  ✓ op-reth: eth_simulateV1 available")
@@ -185,7 +165,9 @@ def check_eth_simulateV1() -> Dict[str, bool]:
                     print(f"  ✗ op-geth: eth_simulateV1 not available")
                     status["op-geth"] = False
                 else:
-                    print(f"  ⚠ op-geth: eth_simulateV1 available (returned error: {result['error'].get('message', 'unknown')})")
+                    print(
+                        f"  ⚠ op-geth: eth_simulateV1 available (returned error: {result['error'].get('message', 'unknown')})"
+                    )
                     status["op-geth"] = True
             else:
                 print(f"  ✓ op-geth: eth_simulateV1 available")
@@ -207,21 +189,17 @@ def check_eth_simulateV1() -> Dict[str, bool]:
 
 def check_block_production() -> bool:
     """Check if blocks are being produced"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking Block Production")
-    print("="*60)
+    print("=" * 60)
 
     try:
         import httpx
+
         client = httpx.Client(timeout=5.0)
 
         # Get initial block number
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "eth_blockNumber",
-            "params": [],
-            "id": 1
-        }
+        payload = {"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}
 
         response = client.post("http://127.0.0.1:18545", json=payload)
         initial_block = int(response.json()["result"], 16)
@@ -254,24 +232,27 @@ def check_block_production() -> bool:
 
 def check_logs_for_errors() -> Dict[str, List[str]]:
     """Check container logs for errors"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Checking Logs for Errors")
-    print("="*60)
+    print("=" * 60)
 
     containers = ["ec-opgeth", "ec-opreth", "cc-lighthouse", "cc-prysm"]
     errors = {}
 
     for container in containers:
-        output, _ = run_command([
-            "docker", "logs", "--tail", "50", container
-        ])
+        output, _ = run_command(["docker", "logs", "--tail", "50", container])
 
         error_lines = []
         for line in output.split("\n"):
             line_lower = line.lower()
-            if any(keyword in line_lower for keyword in ["error", "fatal", "panic", "failed"]):
+            if any(
+                keyword in line_lower
+                for keyword in ["error", "fatal", "panic", "failed"]
+            ):
                 # Filter out non-critical errors
-                if not any(skip in line_lower for skip in ["error reading", "connection reset"]):
+                if not any(
+                    skip in line_lower for skip in ["error reading", "connection reset"]
+                ):
                     error_lines.append(line.strip())
 
         if error_lines:
@@ -286,17 +267,19 @@ def check_logs_for_errors() -> Dict[str, List[str]]:
     return errors
 
 
-def print_summary(containers: Dict[str, bool],
-                  execution: Dict[str, bool],
-                  consensus: Dict[str, bool],
-                  simulatev1: Dict[str, bool],
-                  block_production: bool,
-                  logs: Dict[str, List[str]]) -> int:
+def print_summary(
+    containers: Dict[str, bool],
+    execution: Dict[str, bool],
+    consensus: Dict[str, bool],
+    simulatev1: Dict[str, bool],
+    block_production: bool,
+    logs: Dict[str, List[str]],
+) -> int:
     """Print summary and return exit code"""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("HEALTH CHECK SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     all_healthy = True
 
@@ -328,32 +311,34 @@ def print_summary(containers: Dict[str, bool],
 
     # Critical errors
     critical_errors = sum(len(v) for v in logs.values())
-    print(f"\nCritical Errors: {'✓ None' if critical_errors == 0 else f'✗ {critical_errors} found'}")
+    print(
+        f"\nCritical Errors: {'✓ None' if critical_errors == 0 else f'✗ {critical_errors} found'}"
+    )
 
     # Overall status
     all_healthy = (
-        all_containers_ok and
-        all_execution_ok and
-        all_consensus_ok and
-        block_production and
-        critical_errors == 0
+        all_containers_ok
+        and all_execution_ok
+        and all_consensus_ok
+        and block_production
+        and critical_errors == 0
     )
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     if all_healthy:
         print("✓ NETWORK IS HEALTHY")
     else:
         print("✗ NETWORK HAS ISSUES")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     return 0 if all_healthy else 1
 
 
 def main():
     """Main health check"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("eth_simulateV1 Network Health Check")
-    print("="*60)
+    print("=" * 60)
 
     # Run all checks
     containers = check_docker_containers()
@@ -365,8 +350,7 @@ def main():
 
     # Print summary
     exit_code = print_summary(
-        containers, execution, consensus, simulatev1,
-        block_production, logs
+        containers, execution, consensus, simulatev1, block_production, logs
     )
 
     sys.exit(exit_code)

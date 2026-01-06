@@ -54,8 +54,6 @@ inactivity-penalty-quotient: 67108864
 min-slashing-penalty-quotient: 128
 # Proportional slashing multiplier
 proportional-slashing-multiplier: 3
-# Whistleblower reward quotient
-whistleblower-reward-quotient: 512
 
 # Eth1 parameters
 # Chain ID for the execution layer

@@ -6,25 +6,23 @@ This script demonstrates various ways to test eth_simulateV1
 
 import json
 import time
+
 import httpx
 
 
 class ManualTester:
     """Manual testing utilities for eth_simulateV1"""
 
-    def __init__(self, opgeth_url="http://127.0.0.1:18545", opreth_url="http://127.0.0.1:28545"):
+    def __init__(
+        self, opgeth_url="http://127.0.0.1:18545", opreth_url="http://127.0.0.1:28545"
+    ):
         self.opgeth_url = opgeth_url
         self.opreth_url = opreth_url
         self.client = httpx.Client(timeout=30.0)
 
     def rpc_call(self, url, method, params=None):
         """Make an RPC call"""
-        payload = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": params or [],
-            "id": 1
-        }
+        payload = {"jsonrpc": "2.0", "method": method, "params": params or [], "id": 1}
 
         try:
             response = self.client.post(url, json=payload)
@@ -45,16 +43,9 @@ class ManualTester:
         print("TEST 1: Basic Call (Empty Transactions)")
         print("=" * 60)
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": []
-        }
+        params = {"blockNumber": "latest", "transactions": []}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -70,19 +61,12 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",  # 1 ETH
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -98,19 +82,12 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0x0",
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -126,7 +103,7 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
         tx2 = {
@@ -134,19 +111,12 @@ class ManualTester:
             "to": "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
             "value": "0x56bc75e2d63100000",  # 100 ETH
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx1, tx2]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx1, tx2]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -162,19 +132,12 @@ class ManualTester:
             "to": "0x0000000000000000000000000000000000006A7e",  # Bridge contract
             "value": "0xbc614e0000000",  # 1.3 ETH
             "gas": "0x186a0",  # 100,000
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -206,19 +169,12 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
-        params = {
-            "blockNumber": hex(target_block),
-            "transactions": [tx]
-        }
+        params = {"blockNumber": hex(target_block), "transactions": [tx]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -234,19 +190,12 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             "gas": "0x5208",
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx]}
 
-        result = self.rpc_call(
-            self.opreth_url,
-            "eth_simulateV1",
-            [params]
-        )
+        result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
 
         self.print_result("Result:", result)
         return result
@@ -259,11 +208,13 @@ class ManualTester:
 
         accounts = [
             "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
-            "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+            "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
         ]
 
         for account in accounts:
-            result = self.rpc_call(self.opreth_url, "eth_getBalance", [account, "latest"])
+            result = self.rpc_call(
+                self.opreth_url, "eth_getBalance", [account, "latest"]
+            )
             if "result" in result:
                 balance_wei = int(result["result"], 16)
                 balance_eth = balance_wei / 10**18
@@ -282,13 +233,10 @@ class ManualTester:
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
-        params = {
-            "blockNumber": "latest",
-            "transactions": [tx]
-        }
+        params = {"blockNumber": "latest", "transactions": [tx]}
 
         print("\nop-reth result:")
         reth_result = self.rpc_call(self.opreth_url, "eth_simulateV1", [params])
@@ -316,7 +264,9 @@ class ManualTester:
             return
 
         # Get block details
-        block_result = self.rpc_call(self.opreth_url, "eth_getBlockByNumber", ["latest", False])
+        block_result = self.rpc_call(
+            self.opreth_url, "eth_getBlockByNumber", ["latest", False]
+        )
 
         if "result" in block_result:
             block = block_result["result"]
@@ -370,6 +320,7 @@ class ManualTester:
         except Exception as e:
             print(f"\nERROR: {str(e)}")
             import traceback
+
             traceback.print_exc()
 
         finally:
@@ -391,7 +342,7 @@ def main():
     tester = ManualTester()
 
     # Run all tests
-    results = tester.run_all_tests()
+    tester.run_all_tests()
 
     # Ask if user wants to run specific tests
     print("\n" + "=" * 60)

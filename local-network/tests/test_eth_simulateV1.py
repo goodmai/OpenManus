@@ -3,11 +3,9 @@
 Test script for eth_simulateV1 on op-geth and op-reth
 """
 
-import json
 import time
-import asyncio
-import websockets
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
+
 import httpx
 
 
@@ -26,13 +24,11 @@ class EthRPCClient:
             "jsonrpc": "2.0",
             "method": method,
             "params": params or [],
-            "id": self.request_id
+            "id": self.request_id,
         }
 
         response = self.client.post(
-            self.url,
-            json=payload,
-            headers={"Content-Type": "application/json"}
+            self.url, json=payload, headers={"Content-Type": "application/json"}
         )
         response.raise_for_status()
         result = response.json()
@@ -76,9 +72,9 @@ class EthRPCClient:
 
 def test_eth_simulateV1_basic():
     """Test basic eth_simulateV1 functionality"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Testing eth_simulateV1 - Basic Functionality")
-    print("="*60)
+    print("=" * 60)
 
     # Initialize clients
     opgeth = EthRPCClient("http://127.0.0.1:18545")
@@ -93,11 +89,7 @@ def test_eth_simulateV1_basic():
         print(f"  op-reth block: {opreth_block}")
 
         # Test parameters
-        simulation_params = {
-            "blockNumber": "latest",
-            "state": None,
-            "transactions": []
-        }
+        simulation_params = {"blockNumber": "latest", "state": None, "transactions": []}
 
         # Test 1: Basic simulation with empty transaction list
         print("\nTest 1: Basic simulation (empty transactions)")
@@ -124,7 +116,7 @@ def test_eth_simulateV1_basic():
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",  # 1 ETH
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
         simulation_params["transactions"] = [tx_params]
@@ -168,8 +160,8 @@ def test_eth_simulateV1_basic():
             geth_result = opgeth.eth_simulateV1(simulation_params)
 
             # Compare gas used
-            reth_gas = reth_result.get('gasUsed', 'N/A')
-            geth_gas = geth_result.get('gasUsed', 'N/A')
+            reth_gas = reth_result.get("gasUsed", "N/A")
+            geth_gas = geth_result.get("gasUsed", "N/A")
 
             if reth_gas == geth_gas:
                 print(f"  ✓ Results match: Gas used = {reth_gas}")
@@ -180,9 +172,9 @@ def test_eth_simulateV1_basic():
         except Exception as e:
             print(f"  ✗ Comparison failed: {str(e)}")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Basic tests completed!")
-        print("="*60)
+        print("=" * 60)
 
     finally:
         opgeth.close()
@@ -191,9 +183,9 @@ def test_eth_simulateV1_basic():
 
 def test_eth_simulateV1_depository():
     """Test eth_simulateV1 with depository transactions"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Testing eth_simulateV1 - Depository Transactions")
-    print("="*60)
+    print("=" * 60)
 
     opreth = EthRPCClient("http://127.0.0.1:28545")
 
@@ -205,7 +197,9 @@ def test_eth_simulateV1_depository():
         # Get a previous block for context
         if current_block > 10:
             prev_block = opreth.get_block_by_number(current_block - 10, True)
-            print(f"Previous block ({current_block - 10}) has {len(prev_block.get('transactions', []))} transactions")
+            print(
+                f"Previous block ({current_block - 10}) has {len(prev_block.get('transactions', []))} transactions"
+            )
 
         # Test simulation with depository-style transaction
         # This simulates a deposit to the bridge contract
@@ -214,13 +208,10 @@ def test_eth_simulateV1_depository():
             "to": "0x0000000000000000000000000000000000006A7e",  # Bridge contract
             "value": "0xbc614e0000000",  # 1.3 ETH (large deposit)
             "gas": "0x186a0",  # 100,000 gas
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
 
-        simulation_params = {
-            "blockNumber": "latest",
-            "transactions": [deposit_tx]
-        }
+        simulation_params = {"blockNumber": "latest", "transactions": [deposit_tx]}
 
         print("\nSimulating depository transaction...")
         try:
@@ -238,14 +229,14 @@ def test_eth_simulateV1_depository():
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xde0b6b3a7640000",
             "gas": "0x5208",
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
         tx2 = {
             "from": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "to": "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
             "value": "0x56bc75e2d63100000",  # 100 ETH
             "gas": "0x5208",
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
 
         simulation_params["transactions"] = [tx1, tx2]
@@ -257,9 +248,9 @@ def test_eth_simulateV1_depository():
         except Exception as e:
             print(f"  ✗ Multi-transaction simulation failed: {str(e)}")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Depository tests completed!")
-        print("="*60)
+        print("=" * 60)
 
     finally:
         opreth.close()
@@ -267,9 +258,9 @@ def test_eth_simulateV1_depository():
 
 def test_eth_simulateV1_edge_cases():
     """Test edge cases and error handling"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Testing eth_simulateV1 - Edge Cases")
-    print("="*60)
+    print("=" * 60)
 
     opreth = EthRPCClient("http://127.0.0.1:28545")
 
@@ -277,10 +268,9 @@ def test_eth_simulateV1_edge_cases():
         # Test 1: Invalid block number
         print("\nTest 1: Invalid block number")
         try:
-            result = opreth.eth_simulateV1({
-                "blockNumber": "0xFFFFFFFFFFFFFFFF",
-                "transactions": []
-            })
+            result = opreth.eth_simulateV1(
+                {"blockNumber": "0xFFFFFFFFFFFFFFFF", "transactions": []}
+            )
             print(f"  ⚠ Should have failed but succeeded")
         except Exception as e:
             print(f"  ✓ Correctly rejected invalid block: {str(e)[:50]}...")
@@ -288,9 +278,7 @@ def test_eth_simulateV1_edge_cases():
         # Test 2: Missing required fields
         print("\nTest 2: Missing required fields")
         try:
-            result = opreth.eth_simulateV1({
-                "blockNumber": "latest"
-            })
+            result = opreth.eth_simulateV1({"blockNumber": "latest"})
             print(f"  ⚠ Should have failed but succeeded")
         except Exception as e:
             print(f"  ✓ Correctly rejected missing fields: {str(e)[:50]}...")
@@ -298,12 +286,9 @@ def test_eth_simulateV1_edge_cases():
         # Test 3: Invalid transaction format
         print("\nTest 3: Invalid transaction format")
         try:
-            result = opreth.eth_simulateV1({
-                "blockNumber": "latest",
-                "transactions": [{
-                    "from": "0xinvalid"
-                }]
-            })
+            result = opreth.eth_simulateV1(
+                {"blockNumber": "latest", "transactions": [{"from": "0xinvalid"}]}
+            )
             print(f"  ⚠ Should have failed but succeeded")
         except Exception as e:
             print(f"  ✓ Correctly rejected invalid tx: {str(e)[:50]}...")
@@ -315,14 +300,13 @@ def test_eth_simulateV1_edge_cases():
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",  # Huge amount
             "gas": "0x5208",
-            "gasPrice": "0x1"
+            "gasPrice": "0x1",
         }
 
         try:
-            result = opreth.eth_simulateV1({
-                "blockNumber": "latest",
-                "transactions": [insufficient_tx]
-            })
+            result = opreth.eth_simulateV1(
+                {"blockNumber": "latest", "transactions": [insufficient_tx]}
+            )
             print(f"  ⚠ Should have failed but succeeded")
         except Exception as e:
             print(f"  ✓ Correctly rejected insufficient balance: {str(e)[:50]}...")
@@ -334,22 +318,21 @@ def test_eth_simulateV1_edge_cases():
             "to": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "value": "0x0",
             "gas": "0x5208",
-            "gasPrice": "0x0"
+            "gasPrice": "0x0",
         }
 
         try:
-            result = opreth.eth_simulateV1({
-                "blockNumber": "latest",
-                "transactions": [zero_tx]
-            })
+            result = opreth.eth_simulateV1(
+                {"blockNumber": "latest", "transactions": [zero_tx]}
+            )
             print(f"  ✓ Zero value transaction simulated successfully")
             print(f"    Gas used: {result.get('gasUsed', 'N/A')}")
         except Exception as e:
             print(f"  ✗ Zero value transaction failed: {str(e)}")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Edge case tests completed!")
-        print("="*60)
+        print("=" * 60)
 
     finally:
         opreth.close()
@@ -357,9 +340,9 @@ def test_eth_simulateV1_edge_cases():
 
 def main():
     """Run all tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("eth_simulateV1 Test Suite")
-    print("="*60)
+    print("=" * 60)
 
     # Wait for services to be ready
     print("\nWaiting for services to be ready...")
@@ -370,9 +353,9 @@ def main():
     test_eth_simulateV1_depository()
     test_eth_simulateV1_edge_cases()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("All tests completed!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":
