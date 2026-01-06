@@ -1,0 +1,170 @@
+# Config file for Prysm beacon chain
+
+# General
+# Network ID for the blockchain
+network-id: 1337
+# Genesis time for the beacon chain
+genesis-time: 1704067200
+# Number of validators
+min-genesis-active-validator-count: 256
+# Genesis delay in seconds
+genesis-delay: 10
+# Fork version
+genesis-fork-version: "0x00000000"
+
+# Fork schedule
+altair-fork-epoch: 0
+bellatrix-fork-epoch: 0
+capella-fork-epoch: 0
+deneb-fork-epoch: 0
+electra-fork-epoch: 18446744073709551615
+
+# Time parameters
+# Seconds per slot
+seconds-per-slot: 12
+# Slots per epoch
+slots-per-epoch: 32
+# Epochs per sync committee period
+epochs-per-sync-committee-period: 256
+
+# Validator
+# Minimum per epoch churn limit
+min-per-epoch-churn-limit: 4
+# Churn limit quotient
+churn-limit-quotient: 65536
+# Proposer slashings per block
+max-proposer-slashings: 16
+# Attester slashings per block
+max-attester-slashings: 2
+# Attestations per block
+max-attestations: 128
+# Deposits per block
+max-deposits: 16
+# Voluntary exits per block
+max-voluntary-exits: 16
+
+# Gwei values
+# Balance to activate a validator
+min-balance: 1000000000
+# Ejection balance
+ejection-balance: 16000000000
+# Inactivity penalty quotient
+inactivity-penalty-quotient: 67108864
+# Minimum slashing penalty quotient
+min-slashing-penalty-quotient: 128
+# Proportional slashing multiplier
+proportional-slashing-multiplier: 3
+# Whistleblower reward quotient
+whistleblower-reward-quotient: 512
+
+# Eth1 parameters
+# Chain ID for the execution layer
+eth1-chain-id: 1337
+# Network ID for the execution layer
+eth1-network-id: 1337
+# Epochs per eth1 voting period
+epochs-per-eth1-voting-period: 64
+# Seconds per eth1 voting period
+slots-eth1-voting-period: 2048
+# Follow distance
+eth1-follow-distance: 16
+
+# Deposit contract
+deposit-contract-address: "0x0000000000000000000000000000000000006A7e"
+
+# Gwei values
+# Base reward factor
+base-reward-factor: 64
+# Proposer reward quotient
+proposer-reward-quotient: 8
+# Whistleblower reward quotient
+whistleblower-reward-quotient: 512
+# Attestation inclusion reward quotient
+attestation-inclusion-reward-quotient: 8
+# Target validators per committee
+target-committee-size: 4
+# Sync committee size
+sync-committee-size: 512
+
+# Max committees per slot
+max-committees-per-slot: 64
+# Max validators per committee
+max-validators-per-committee: 2048
+
+# Domain types
+domain-beacon-proposer: 0x00000000
+domain-beacon-attester: 0x01000000
+domain-randao: 0x02000000
+domain-deposit: 0x03000000
+domain-voluntary-exit: 0x04000000
+domain-selection-proof: 0x05000000
+domain-aggregate-and-proof: 0x06000000
+domain-sync-committee: 0x07000000
+domain-sync-committee-selection-proof: 0x08000000
+domain-contribution-and-proof: 0x09000000
+
+# Fork
+# Altair
+altair-fork-version: "0x01000000"
+# Bellatrix
+bellatrix-fork-version: "0x02000000"
+# Capella
+capella-fork-version: "0x03000000"
+# Deneb
+deneb-fork-version: "0x04000000"
+# Electra
+electra-fork-version: "0x05000000"
+
+# Time parameters
+# Inactivity score bias
+inactivity-score-bias: 16777216
+# Inactivity score recovery rate
+inactivity-score-recovery-rate: 167772
+
+# Misc
+# BLS signature byte length
+bls-signature-byte-length: 96
+# Bytes per logs bloom
+bytes-per-logs-bloom: 256
+# Minimum validator withdrawability delay
+min-validator-withdrawability-delay: 256
+# Shard committee period
+shard-committee-period: 256
+
+# Bellatrix
+# Bellatrix fork epoch
+bellatrix-fork-epoch: 0
+# Terminal total difficulty
+terminal-total-difficulty: 0
+# Terminal block hash
+terminal-block-hash: 0x0000000000000000000000000000000000000000000000000000000000000000
+# Terminal block hash activation epoch
+terminal-block-hash-activation-epoch: 0
+
+# Capella
+# Capella fork epoch
+capella-fork-epoch: 0
+# Max withdrawals per payload
+max-withdrawals-per-payload: 16
+# Full validator withdrawal delay
+full-validator-withdrawal-delay: 256
+
+# Deneb
+# Deneb fork epoch
+deneb-fork-epoch: 0
+# Max request blocks denominator
+max-request-blocks-denominator: 128
+# Max request blocks sidecar
+max-request-blocks-sidecar: 64
+# Max request blob sidecars
+max-request-blob-sidecars: 768
+# Target epochs to blob proposal
+target-epochs-to-blob-proposal: 2
+# Blob tx gas per blob
+blob-tx-gas-per-blob: 131072
+# Min gas price blob tx
+min-gas-price-blob-tx: 1
+
+# Gas
+# Max blob gas per block
+max-blob-gas-per-block: 393216
