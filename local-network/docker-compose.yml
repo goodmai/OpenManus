@@ -1,0 +1,268 @@
+name: eth-simulatev1-testnet
+services:
+  # Execution Client 1: op-geth (standard)
+  ec-opgeth:
+    container_name: ec-opgeth
+    image: ghcr.io/unitsnetwork/op-geth:v1.101603.0-1
+    stop_grace_period: 5m
+    entrypoint: /bin/sh -c
+    environment:
+      GETH_BOOTNODES: ""
+      GETH_CONFIG: /etc/config.toml
+      GETH_LOG_FILE: /root/logs/op-geth.log
+      GETH_VERBOSITY: 4
+      GETH_LOG_FORMAT: terminal
+      GETH_NETWORKID: 1337
+      NODE_NUMBER: 1
+    command:
+      - |
+        if [ ! -d /root/.ethereum/geth/chaindata ] ; then
+          geth init /tmp/genesis.json
+        else
+          echo geth already initialized
+        fi
+        exec geth \
+        --syncmode=full \
+        --verbosity=4 \
+        --http \
+        --http.addr=0.0.0.0 \
+        --http.vhosts=* \
+        --http.api=eth,web3,txpool,net,debug,engine \
+        --http.corsdomain=* \
+        --ws \
+        --ws.addr=0.0.0.0 \
+        --ws.api=eth,web3,txpool,net,debug \
+        --ws.rpcprefix=/ \
+        --ws.origins=* \
+        --authrpc.addr=0.0.0.0 \
+        --authrpc.vhosts=* \
+        --authrpc.jwtsecret=/etc/secrets/jwtsecret \
+        --nodekey=/etc/secrets/p2p-key
+    ports:
+      - "127.0.0.1:18551:8551" # Engine port
+      - "127.0.0.1:18545:8545" # RPC port
+      - "127.0.0.1:18546:8546" # WebSocket
+      - "30303:30303" # P2P
+      - "30303:30303/udp" # P2P UDP
+    volumes:
+      - ./logs/ec-opgeth:/root/logs
+      - ./data/ec-opgeth:/root/.ethereum
+      - ./configs/ec-common/p2p-key-1.hex:/etc/secrets/p2p-key:ro
+      - ./configs/ec-common/jwtsecret.hex:/etc/secrets/jwtsecret:ro
+      - ./configs/ec-common/config.toml:/etc/config.toml:ro
+      - ./configs/ec-common/genesis.json:/tmp/genesis.json:ro
+    networks:
+      - eth-testnet
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}" http://127.0.0.1:8545'
+      interval: 5s
+      timeout: 1s
+      retries: 10
+
+  # Execution Client 2: op-reth (with eth_simulateV1)
+  ec-opreth:
+    container_name: ec-opreth
+    image: ghcr.io/unitsnetwork/op-reth:simulate-v1-1.0.0
+    stop_grace_period: 5m
+    entrypoint: /bin/sh -c
+    environment:
+      RETH_NETWORKID: 1337
+      RETH_VERBOSITY: 4
+      NODE_NUMBER: 2
+    command:
+      - |
+        if [ ! -d /root/.reth/db ] ; then
+          reth init --chain /tmp/genesis.json --datadir /root/.reth
+        else
+          echo reth already initialized
+        fi
+        exec reth node \
+        --datadir /root/.reth \
+        --chain /tmp/genesis.json \
+        --sync.full \
+        --http \
+        --http.addr=0.0.0.0 \
+        --http.port=8545 \
+        --http.api=eth,web3,txpool,net,debug,engine \
+        --http.corsdomain=* \
+        --ws \
+        --ws.addr=0.0.0.0 \
+        --ws.port=8546 \
+        --ws.api=eth,web3,txpool,net,debug \
+        --ws.origins=* \
+        --authrpc.addr=0.0.0.0 \
+        --authrpc.port=8551 \
+        --authrpc.jwtsecret=/etc/secrets/jwtsecret \
+        --node-key=/etc/secrets/p2p-key \
+        --nat=extip:172.20.0.2 \
+        --port=30304
+    ports:
+      - "127.0.0.1:28551:8551" # Engine port
+      - "127.0.0.1:28545:8545" # RPC port
+      - "127.0.0.1:28546:8546" # WebSocket
+      - "30304:30304" # P2P
+      - "30304:30304/udp" # P2P UDP
+    volumes:
+      - ./logs/ec-opreth:/root/logs
+      - ./data/ec-opreth:/root/.reth
+      - ./configs/ec-common/p2p-key-2.hex:/etc/secrets/p2p-key:ro
+      - ./configs/ec-common/jwtsecret.hex:/etc/secrets/jwtsecret:ro
+      - ./configs/ec-common/genesis.json:/tmp/genesis.json:ro
+    networks:
+      - eth-testnet
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}" http://127.0.0.1:8545'
+      interval: 5s
+      timeout: 1s
+      retries: 10
+
+  # Consensus Client 1: Lighthouse
+  cc-lighthouse:
+    container_name: cc-lighthouse
+    image: sigp/lighthouse:v5.2.1
+    command:
+      - lighthouse
+      - bn
+      - --network=/config/config.yaml
+      - --execution-endpoints=http://ec-opgeth:8551
+      - --jwt-secrets=/etc/secrets/jwtsecret
+      - --datadir=/data
+      - --http
+      - --http-address=0.0.0.0
+      - --http-port=5052
+      - --port=9000
+      - --discovery-port=9000
+      - --checkpoint-sync-url=
+      - --genesis-state=/config/genesis.ssz
+      - --allow-insecure-genesis-sync
+    ports:
+      - "127.0.0.1:15052:5052" # HTTP API
+      - "9000:9000" # P2P
+      - "9000:9000/udp" # P2P UDP
+    volumes:
+      - ./logs/cc-lighthouse:/root/logs
+      - ./data/cc-lighthouse:/data
+      - ./configs/ec-common/jwtsecret.hex:/etc/secrets/jwtsecret:ro
+      - ./configs/consensus/config-lighthouse.yaml:/config/config.yaml:ro
+      - ./configs/consensus/genesis.ssz:/config/genesis.ssz:ro
+    networks:
+      - eth-testnet
+    depends_on:
+      ec-opgeth:
+        condition: service_healthy
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBlockByNumber\",\"params\":[\"0x0\",false],\"id\":1}" http://127.0.0.1:5052'
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # Consensus Client 2: Prysm (or second Lighthouse)
+  cc-prysm:
+    container_name: cc-prysm
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.1.0
+    command:
+      - --datadir=/data
+      - --execution-endpoint=http://ec-opreth:8551
+      - --jwt-secret=/etc/secrets/jwtsecret
+      - --rpc-host=0.0.0.0
+      - --rpc-port=4000
+      - --grpc-gateway-host=0.0.0.0
+      - --grpc-gateway-port=3500
+      - --p2p-tcp-port=13000
+      - --p2p-udp-port=12000
+      - --genesis-state=/config/genesis.ssz
+      - --accept-terms-of-use
+      - --chain-config-file=/config/config.yml
+      - --min-sync-peers=0
+      - --force-clear-db
+    ports:
+      - "127.0.0.1:14000:4000" # RPC
+      - "127.0.0.1:13500:3500" # GRPC Gateway
+      - "13000:13000" # P2P TCP
+      - "12000:12000/udp" # P2P UDP
+    volumes:
+      - ./logs/cc-prysm:/root/logs
+      - ./data/cc-prysm:/data
+      - ./configs/ec-common/jwtsecret.hex:/etc/secrets/jwtsecret:ro
+      - ./configs/consensus/config-prysm.yml:/config/config.yml:ro
+      - ./configs/consensus/genesis.ssz:/config/genesis.ssz:ro
+    networks:
+      - eth-testnet
+    depends_on:
+      ec-opreth:
+        condition: service_healthy
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBlockByNumber\",\"params\":[\"0x0\",false],\"id\":1}" http://127.0.0.1:4000'
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # Validator 1: Lighthouse Validator
+  validator-lighthouse:
+    container_name: validator-lighthouse
+    image: sigp/lighthouse:v5.2.1
+    command:
+      - lighthouse
+      - vc
+      - --network=/config/config.yaml
+      - --datadir=/data
+      - --beacon-nodes=http://cc-lighthouse:5052
+      - --graffiti=eth_simulatev1_test
+      - --testnet-dir=/config
+    volumes:
+      - ./logs/validator-lighthouse:/root/logs
+      - ./data/validator-lighthouse:/data
+      - ./configs/consensus/config-lighthouse.yaml:/config/config.yaml:ro
+      - ./configs/consensus/validator-keys:/config/validator-keys:ro
+      - ./configs/consensus/deposit-data.json:/config/deposit-data.json:ro
+    networks:
+      - eth-testnet
+    depends_on:
+      cc-lighthouse:
+        condition: service_healthy
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+
+  # Test Runner
+  test-runner:
+    container_name: test-runner
+    image: python:3.12-slim
+    volumes:
+      - ./tests:/tests
+      - ./scripts:/scripts
+    working_dir: /tests
+    command: tail -f /dev/null
+    networks:
+      - eth-testnet
+    profiles:
+      - tests
+
+networks:
+  eth-testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

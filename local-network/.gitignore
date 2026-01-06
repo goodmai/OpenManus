@@ -1,0 +1,44 @@
+# Local Network Test Environment
+# Generated files and data
+
+# Data directories
+data/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# Test outputs
+*.log
+test_results/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Generated validator keys (optional - keep if you want to reuse)
+# configs/consensus/validator-keys/
+
+# Deposit data (optional - keep if you want to reuse)
+# configs/consensus/deposit-data.json
