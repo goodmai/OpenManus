@@ -1,0 +1,46 @@
+services:
+  op-reth:
+    container_name: op-reth
+    image: ghcr.io/unitsnetwork/op-reth:simulate-v1-latest
+    stop_grace_period: 5m
+    environment:
+      RETH_BOOTNODES: ""
+      RETH_CONFIG: /etc/config.toml
+      RETH_LOG_FILE: /root/logs/op-reth.log
+      RETH_VERBOSITY: 4 # debug
+    command:
+      - |
+        if [ ! -d /root/.ethereum/geth/chaindata ] ; then
+          geth init /tmp/genesis.json
+        else
+          echo geth already initialized
+        fi
+        exec reth node \
+        --chain=/tmp/genesis.json \
+        --syncmode=full \
+        --log.console.format=terminal \
+        --log.console.level=debug \
+        --http \
+        --http.addr=0.0.0.0 \
+        --http.vhosts=* \
+        --http.api=eth,web3,txpool,net,debug,engine \
+        --http.corsdomain=* \
+        --ws \
+        --ws.addr=0.0.0.0 \
+        --ws.api=eth,web3,txpool,net,debug \
+        --ws.origins=* \
+        --authrpc.addr=0.0.0.0 \
+        --authrpc.vhosts=* \
+        --authrpc.jwtsecret=/etc/secrets/jwtsecret \
+        --node.key=/etc/secrets/p2p-key \
+        --metrics=0.0.0.0:9001
+    logging:
+      driver: local
+      options:
+        max-size: 1g
+        max-file: 5
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data {"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}  http://127.0.0.1:8545'
+      interval: 5s
+      timeout: 1s
+      retries: 10
