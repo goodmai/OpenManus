@@ -1,0 +1,35 @@
+[Node]
+DataDir = "/root/.ethereum"
+NoUSB = true
+IPCPath = "/root/.ethereum/geth.ipc"
+
+[Node.P2P]
+MaxPeers = 50
+NoDiscovery = false
+DiscoveryV5 = true
+StaticNodes = []
+TrustedNodes = []
+
+[Node.HTTPHost]
+Host = "0.0.0.0"
+Port = 8545
+CorsAllowedOrigins = ["*"]
+VirtualHosts = ["*"]
+
+[Node.WS]
+Enabled = true
+Host = "0.0.0.0"
+Port = 8546
+Origins = ["*"]
+
+[Eth]
+SyncMode = "full"
+NetworkId = 1337
+DatabaseCache = 1024
+DatabaseHandles = 1024
+TrieCache = 256
+TrieTimeout = 3600
+EnablePreimageRecording = false
+NoPruning = false
+TxPool = 4096
+TxPoolPriceLimit = 1

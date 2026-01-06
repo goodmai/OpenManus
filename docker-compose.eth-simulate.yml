@@ -1,0 +1,90 @@
+version: '3.8'
+
+name: eth-simulate-test
+
+services:
+  # ===============================
+  # Execution Layer
+  # ===============================
+  ec-1:
+    container_name: ec-1
+    image: ghcr.io/unitsnetwork/op-geth:v1.101603.0-1
+    stop_grace_period: 5m
+    entrypoint: /bin/sh -c
+    environment:
+      NODE_NUMBER: 1
+      GETH_NETWORKID: 1337
+      GETH_BOOTNODES: ""
+      GETH_CONFIG: /etc/config.toml
+      GETH_LOG_FILE: /root/logs/op-geth.log
+      GETH_VERBOSITY: 4
+      GETH_LOG_FORMAT: terminal
+    command: |
+      if [ ! -d /root/.ethereum/geth/chaindata ] ; then
+        geth init /tmp/genesis.json
+      else
+        echo geth already initialized
+      fi
+      exec geth \
+        --syncmode=full \
+        --verbosity=4 \
+        --http \
+        --http.addr=0.0.0.0 \
+        --http.vhosts=* \
+        --http.api=eth,web3,txpool,net,debug,engine \
+        --http.corsdomain=* \
+        --ws \
+        --ws.addr=0.0.0.0 \
+        --ws.api=eth,web3,txpool,net,debug \
+        --ws.rpcprefix=/ \
+        --ws.origins=* \
+        --authrpc.addr=0.0.0.0 \
+        --authrpc.vhosts=* \
+        --authrpc.jwtsecret=/etc/secrets/jwtsecret \
+        --nodekey=/etc/secrets/p2p-key \
+        --nodiscover \
+        --mine \
+        --miner.etherbase=0x7dbcf9c6c3583b76669100f9be3caf6d722bc9f9
+    ports:
+      - "127.0.0.1:18545:8545"
+      - "127.0.0.1:18546:8546"
+      - "127.0.0.1:18551:8551"
+    volumes:
+      - ./eth_simulate_proxy/logs/ec-1:/root/logs
+      - ./eth_simulate_proxy/configs/p2p-key-1.hex:/etc/secrets/p2p-key:ro
+      - ./eth_simulate_proxy/configs/jwtsecret.hex:/etc/secrets/jwtsecret:ro
+      - ./eth_simulate_proxy/configs/config.toml:/etc/config.toml:ro
+      - ./eth_simulate_proxy/configs/genesis.json:/tmp/genesis.json:ro
+    healthcheck:
+      test: 'wget -qO /dev/null --header "content-type: application/json" --post-data {"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1} http://127.0.0.1:8545'
+      interval: 5s
+      timeout: 1s
+      retries: 10
+    networks:
+      - testnet
+
+  # eth_simulateV1 Proxy Service
+  ec-2:
+    container_name: ec-2
+    build:
+      context: ./eth_simulate_proxy
+      dockerfile: Dockerfile
+    environment:
+      - GETH_RPC_URL=http://ec-1:8545
+    ports:
+      - "127.0.0.1:28545:8545"
+      - "127.0.0.1:28546:8546"
+    depends_on:
+      ec-1:
+        condition: service_healthy
+    healthcheck:
+      test: 'wget -qO /dev/null http://127.0.0.1:8545/health'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - testnet
+
+networks:
+  testnet:
+    driver: bridge

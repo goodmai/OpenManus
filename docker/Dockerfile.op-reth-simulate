@@ -1,0 +1,82 @@
+# Multi-stage Dockerfile for building op-reth with eth_simulateV1 support
+# This builds Reth from source and adds eth_simulateV1 RPC method
+
+ARG RETH_VERSION=v1.0.0-rc.4
+ARG UBUNTU_VERSION=22.04
+
+# ===============================
+# Build Stage
+# ===============================
+FROM ghcr.io/paradigmxyz/reth:${RETH_VERSION}-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    git \
+    cmake \
+    g++ \
+    gcc \
+    musl-dev \
+    pkgconfig \
+    openssl-dev \
+    libudev-dev \
+    make \
+    bash
+
+# Clone Reth repository
+WORKDIR /build
+RUN git clone https://github.com/paradigmxyz/reth.git --depth 1 --branch ${RETH_VERSION}
+
+WORKDIR /build/reth
+
+# Apply eth_simulateV1 patch
+# This adds the eth_simulateV1 RPC method to Reth
+COPY patches/eth_simulateV1.patch /tmp/eth_simulateV1.patch
+RUN if [ -f /tmp/eth_simulateV1.patch ]; then \
+        echo "Applying eth_simulateV1 patch..."; \
+        git apply /tmp/eth_simulateV1.patch; \
+    else \
+        echo "No patch found, building standard Reth"; \
+    fi
+
+# Build Reth in release mode
+RUN cargo install --path . --profile maxperf
+
+# ===============================
+# Runtime Stage
+# ===============================
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    libgcc \
+    curl \
+    bash
+
+# Create user
+RUN addgroup -g 1000 reth && \
+    adduser -D -u 1000 -G reth reth
+
+# Copy binary from builder
+COPY --from=builder /root/.cargo/bin/reth /usr/local/bin/reth
+
+# Set up directories
+RUN mkdir -p /root/.ethereum /data /root/logs && \
+    chown -R reth:reth /root/.ethereum /data /root/logs
+
+# Switch to non-root user
+USER reth
+
+# Expose ports
+EXPOSE 8545 8546 8551 30303 30303/udp
+
+# Set working directory
+WORKDIR /root/.ethereum
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://127.0.0.1:8545 || exit 1
+
+# Default command
+ENTRYPOINT ["reth"]
+CMD ["node", "--chain", "/tmp/genesis.json", "--datadir", "/root/.ethereum", "--http", "--http.addr", "0.0.0.0", "--http.port", "8545", "--http.api", "eth,net,web3,debug,trace,txpool,admin,rpc,engine", "--authrpc.addr", "0.0.0.0", "--authrpc.port", "8551"]
