@@ -1,9 +1,9 @@
 """Tests for the AsyncDockerizedTerminal implementation."""
 
-import docker
 import pytest
 import pytest_asyncio
 
+import docker
 from app.sandbox.core.terminal import AsyncDockerizedTerminal
 
 

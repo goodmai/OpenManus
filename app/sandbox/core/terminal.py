@@ -10,10 +10,11 @@ import re
 import socket
 from typing import Dict, Optional, Tuple, Union
 
-import docker
-from docker import APIClient
 from docker.errors import APIError
 from docker.models.containers import Container
+
+import docker
+from docker import APIClient
 
 
 class DockerSession:

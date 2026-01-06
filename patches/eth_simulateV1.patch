@@ -1,0 +1,24 @@
+# Placeholder patch for eth_simulateV1
+#
+# IMPORTANT: This is a placeholder! It does not add actual eth_simulateV1 functionality.
+# This patch is only included to make the Docker build process work.
+#
+# For a real implementation, you need to:
+# 1. Implement eth_simulateV1 in crates/rpc/rpc/src/eth.rs
+# 2. Add SimulationResult type in crates/rpc/rpc-types/src/eth.rs
+# 3. Register the RPC method in crates/rpc/rpc/src/lib.rs
+# 4. Handle Optimism-specific features (deposit transactions, L1 fees, etc.)
+#
+# See docs/ETH_SIMULATE_V1_IMPLEMENTATION_NOTES.md for detailed implementation guide.
+#
+# This placeholder patch creates a no-op change that won't break the build
+# but serves as a marker that this is the modified version.
+
+diff --git a/crates/reth/src/lib.rs b/crates/reth/src/lib.rs
+index 1234567..89abcdef 100644
+--- a/crates/reth/src/lib.rs
++++ b/crates/reth/src/lib.rs
+@@ -1,3 +1,5 @@
+ // This is a placeholder patch to mark this as eth_simulateV1 modified version
++// For actual eth_simulateV1 implementation, see:
++// docs/ETH_SIMULATE_V1_IMPLEMENTATION_NOTES.md
